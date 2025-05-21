@@ -16,14 +16,21 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         let window = UIWindow(windowScene: windowScene)
         
-        let todoVC = UINavigationController(rootViewController: TodoListViewController())
-        todoVC.tabBarItem = UITabBarItem(title: "Todo", image: UIImage(systemName: "list.bullet"), tag: 0)
+        let todoListView = TodoListView()
+        let doneListView = DoneListView()
+        let todoCoreData = TodoCoreData()
+        let todoRepository = TodoRepository(coreDataManager: todoCoreData)
+        let todoUseCase = TodoUseCase(todoRepository: todoRepository)
+        let todoViewModel = TodoViewModel(useCase: todoUseCase)
         
-        let doneVC = UINavigationController(rootViewController: DoneListViewController())
-        doneVC.tabBarItem = UITabBarItem(title: "Done", image: UIImage(systemName: "checkmark.circle"), tag: 1)
+        let todoViewController = UINavigationController(rootViewController: TodoListViewController(todoListView: todoListView, todoViewModel: todoViewModel))
+        todoViewController.tabBarItem = UITabBarItem(title: "Todo", image: UIImage(systemName: "list.bullet"), tag: 0)
+        
+        let doneViewController = UINavigationController(rootViewController: DoneListViewController(doneListView: doneListView, todoViewModel: todoViewModel))
+        doneViewController.tabBarItem = UITabBarItem(title: "Done", image: UIImage(systemName: "checkmark.circle"), tag: 1)
         
         let tabBarController = UITabBarController()
-        tabBarController.viewControllers = [todoVC, doneVC]
+        tabBarController.viewControllers = [todoViewController, doneViewController]
         
         window.rootViewController = tabBarController
         self.window = window

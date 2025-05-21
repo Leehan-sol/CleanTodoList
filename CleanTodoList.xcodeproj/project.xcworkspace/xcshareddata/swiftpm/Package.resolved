@@ -1,4 +1,5 @@
 {
+  "originHash" : "427750f1c2e7dfa07881e8d92d79b7f6701ced4a17ec11b439e5c84172a915b3",
   "pins" : [
     {
       "identity" : "rxswift",
@@ -19,5 +20,5 @@
       }
     }
   ],
-  "version" : 2
+  "version" : 3
 }

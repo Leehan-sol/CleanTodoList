@@ -10,7 +10,18 @@ import SnapKit
 
 class TodoListViewController: UIViewController {
 
-    let todoListView = TodoListView()
+    private let todoListView: TodoListView
+    private let todoViewModel: TodoViewModelProtocol
+    
+    init(todoListView: TodoListView, todoViewModel: TodoViewModelProtocol) {
+        self.todoListView = todoListView
+        self.todoViewModel = todoViewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     override func loadView() {
         view = todoListView
