@@ -15,21 +15,20 @@ struct TodoRepository: TodoRepositoryProtocol {
         self.coreDataManager = coreDataManager
     }
     
-    func getTodoList() -> [TodoItem] {
-        coreDataManager.getTodoList()
-    }
-    
-    func saveTodoItem(item: TodoItem) {
+    func saveTodoItem(item: TodoItem) -> Result<Bool, CoreDataError> {
         coreDataManager.saveTodoItem(item: item)
     }
     
-    func deleteTodoItem(item: TodoItem) {
-        coreDataManager.deleteTodoItem(item: item)
+    func readTodoList() -> Result<[TodoItem], CoreDataError> {
+        coreDataManager.readTodoList()
     }
     
-    func updateTodoItem(item: TodoItem) {
+    func updateTodoItem(item: TodoItem) -> Result<Bool, CoreDataError> {
         coreDataManager.updateTodoItem(item: item)
     }
     
+    func deleteTodoItem(item: TodoItem) -> Result<Bool, CoreDataError> {
+        coreDataManager.deleteTodoItem(item: item)
+    }
     
 }

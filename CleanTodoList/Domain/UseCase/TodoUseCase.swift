@@ -8,10 +8,10 @@
 import Foundation
 
 protocol TodoUseCaseProtocol {
-    func getTodoList() -> [TodoItem]
-    func saveTodoItem(item: TodoItem)
-    func deleteTodoItem(item: TodoItem)
-    func updateTodoItem(item: TodoItem)
+    func saveTodoItem(item: TodoItem) -> Result<Bool, CoreDataError>
+    func readTodoList() -> Result<[TodoItem], CoreDataError>
+    func updateTodoItem(item: TodoItem) -> Result<Bool, CoreDataError>
+    func deleteTodoItem(item: TodoItem) -> Result<Bool, CoreDataError>
 }
 
 class TodoUseCase: TodoUseCaseProtocol {
@@ -22,20 +22,20 @@ class TodoUseCase: TodoUseCaseProtocol {
         self.todoRepository = todoRepository
     }
     
-    func getTodoList() -> [TodoItem] {
-        todoRepository.getTodoList()
-    }
-    
-    func saveTodoItem(item: TodoItem) {
+    func saveTodoItem(item: TodoItem) -> Result<Bool, CoreDataError> {
         todoRepository.saveTodoItem(item: item)
     }
     
-    func deleteTodoItem(item: TodoItem) {
-        todoRepository.deleteTodoItem(item: item)
+    func readTodoList() -> Result<[TodoItem], CoreDataError> {
+        todoRepository.readTodoList()
     }
     
-    func updateTodoItem(item: TodoItem) {
+    func updateTodoItem(item: TodoItem) -> Result<Bool, CoreDataError> {
         todoRepository.updateTodoItem(item: item)
     }
     
+    func deleteTodoItem(item: TodoItem) -> Result<Bool, CoreDataError> {
+        todoRepository.deleteTodoItem(item: item)
+    }
+
 }
