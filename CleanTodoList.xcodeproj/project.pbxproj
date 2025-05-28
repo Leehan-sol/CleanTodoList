@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		182EA9A52DE6AB08006D7DA7 /* UIScrollView+RxSwift.swift in Sources */ = {isa = PBXBuildFile; fileRef = 182EA9A42DE6AB08006D7DA7 /* UIScrollView+RxSwift.swift */; };
 		183DA3542DDC6E0A0057AE13 /* RxCocoa in Frameworks */ = {isa = PBXBuildFile; productRef = 183DA3532DDC6E0A0057AE13 /* RxCocoa */; };
 		183DA3562DDC6E0A0057AE13 /* RxRelay in Frameworks */ = {isa = PBXBuildFile; productRef = 183DA3552DDC6E0A0057AE13 /* RxRelay */; };
 		183DA3582DDC6E0A0057AE13 /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 183DA3572DDC6E0A0057AE13 /* RxSwift */; };
@@ -30,6 +31,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		182EA9A42DE6AB08006D7DA7 /* UIScrollView+RxSwift.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIScrollView+RxSwift.swift"; sourceTree = "<group>"; };
 		183DA4412DDC80B10057AE13 /* TodoItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoItem.swift; sourceTree = "<group>"; };
 		183DA4432DDDAED70057AE13 /* TodoCoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoCoreData.swift; sourceTree = "<group>"; };
 		183DA4452DDDAFFE0057AE13 /* TodoRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoRepository.swift; sourceTree = "<group>"; };
@@ -65,6 +67,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		182EA9A32DE6AAE6006D7DA7 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				182EA9A42DE6AB08006D7DA7 /* UIScrollView+RxSwift.swift */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
 		183DA3922DDC7F8D0057AE13 /* Domain */ = {
 			isa = PBXGroup;
 			children = (
@@ -88,6 +98,7 @@
 		183DA3CA2DDC7FAE0057AE13 /* Presentation */ = {
 			isa = PBXGroup;
 			children = (
+				182EA9A32DE6AAE6006D7DA7 /* Extensions */,
 				183DA3CB2DDC7FBD0057AE13 /* View */,
 				183DA4022DDC7FCC0057AE13 /* ViewModel */,
 			);
@@ -276,6 +287,7 @@
 				CC34323D2DD9E264008C7EAC /* DoneListViewController.swift in Sources */,
 				CC3431FE2DD9C91C008C7EAC /* TodoListViewController.swift in Sources */,
 				CC3431FA2DD9C91C008C7EAC /* AppDelegate.swift in Sources */,
+				182EA9A52DE6AB08006D7DA7 /* UIScrollView+RxSwift.swift in Sources */,
 				183DA44E2DDDB4170057AE13 /* TodoUseCase.swift in Sources */,
 				CC34323B2DD9E0D2008C7EAC /* TodoListView.swift in Sources */,
 				183DA44A2DDDB11F0057AE13 /* TodoViewModel.swift in Sources */,

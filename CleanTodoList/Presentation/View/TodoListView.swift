@@ -16,6 +16,20 @@ class TodoListView: UIView {
         return tableView
     }()
     
+    let bottomView: UIView = {
+        let view = UIView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 60))
+        let label = UILabel()
+        label.text = "더이상 데이터가 없습니다."
+        view.backgroundColor = .systemGray6
+        view.addSubview(label)
+        
+        label.snp.makeConstraints {
+            $0.centerX.equalToSuperview()
+            $0.centerY.equalToSuperview()
+        }
+        return view
+    }()
+    
     // MARK: - Life Cycle
     override init(frame: CGRect){
         super.init(frame: frame)
@@ -31,8 +45,10 @@ class TodoListView: UIView {
     // MARK: - Method
     private func setUI(){
         backgroundColor = .systemBackground
-        
+    
         addSubview(tableView)
+        self.tableView.tableFooterView = self.bottomView
+        self.tableView.tableFooterView?.isHidden = true
         
         tableView.snp.makeConstraints { make in
             make.top.equalTo(self.safeAreaLayoutGuide.snp.top)
