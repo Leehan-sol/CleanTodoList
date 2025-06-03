@@ -17,7 +17,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let window = UIWindow(windowScene: windowScene)
         
         let todoListView = TodoListView()
-        let doneListView = DoneListView()
         let todoCoreData = TodoCoreData()
         let todoRepository = TodoRepository(coreDataManager: todoCoreData)
         let todoUseCase = TodoUseCase(todoRepository: todoRepository)
@@ -25,14 +24,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         let todoViewController = UINavigationController(rootViewController: TodoListViewController(todoListView: todoListView, todoViewModel: todoViewModel))
         todoViewController.tabBarItem = UITabBarItem(title: "Todo", image: UIImage(systemName: "list.bullet"), tag: 0)
-        
-        let doneViewController = UINavigationController(rootViewController: DoneListViewController(doneListView: doneListView, todoViewModel: todoViewModel))
-        doneViewController.tabBarItem = UITabBarItem(title: "Done", image: UIImage(systemName: "checkmark.circle"), tag: 1)
-        
-        let tabBarController = UITabBarController()
-        tabBarController.viewControllers = [todoViewController, doneViewController]
-        
-        window.rootViewController = tabBarController
+        window.rootViewController = todoViewController
         self.window = window
         window.makeKeyAndVisible()
     }

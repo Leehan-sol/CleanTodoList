@@ -14,12 +14,15 @@ class TodoListViewController: UIViewController {
     
     private let todoListView: TodoListView
     private let todoViewModel: TodoViewModelProtocol
+    
     private let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: nil, action: nil)
+    private let filterButton = UIBarButtonItem(image: UIImage(systemName: "line.horizontal.3.decrease.circle"), style: .plain, target: nil, action: nil)
     
     private let saveAction: PublishSubject<TodoItem> = PublishSubject<TodoItem>()
     private let readAction: PublishSubject<Void> = PublishSubject<Void>()
     private let updateAction: PublishSubject<TodoItem> = PublishSubject<TodoItem>()
     private let deleteAction: PublishSubject<TodoItem> = PublishSubject<TodoItem>()
+    private let filterAction: PublishSubject<FilterType> = PublishSubject<FilterType>()
     private let disposeBag = DisposeBag()
     
     init(todoListView: TodoListView, todoViewModel: TodoViewModelProtocol) {
@@ -39,17 +42,15 @@ class TodoListViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setUI()
-        setGesture()
         setAction()
         setBinding()
     }
     
-    func setUI() {
-        navigationItem.rightBarButtonItem = addButton
-    }
-    
-    private func setGesture() {
-    
+    private func setUI() {
+        navigationItem.rightBarButtonItems = [addButton, filterButton]
+        todoListView.tableView.register(TodoListViewCell.self, forCellReuseIdentifier: "TodoListCell")
+        todoListView.tableView.tableFooterView = todoListView.bottomView
+        todoListView.tableView.tableFooterView?.isHidden = true
     }
     
     private func setAction() {
@@ -57,6 +58,13 @@ class TodoListViewController: UIViewController {
             .bind { [weak self] in
                 guard let self = self else { return }
                 self.addButtonTapped()
+            }
+            .disposed(by: disposeBag)
+        
+        filterButton.rx.tap
+            .bind { [weak self] in
+                guard let self = self else { return }
+                self.showFilterView()
             }
             .disposed(by: disposeBag)
         
@@ -68,63 +76,99 @@ class TodoListViewController: UIViewController {
                 self.readAction.onNext(())
             }).disposed(by: disposeBag)
         
-        // TODO: - 1) 뷰컨 액션 정의
-        // 테이블뷰 셀 누르면 updateAction.onNext - 해당 할일 전달, 데이터 업데이트
-        // 테이블뷰 왼쪽으로 드래그시 휴지통 버튼 표시, deleteAction onNext - 해당 할일 전달, 삭제
-
+        todoListView.tableView.rx.modelSelected(TodoItem.self)
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] selectedItem in
+                guard let self = self else { return }
+                self.todoItemTapped(item: selectedItem)
+            })
+            .disposed(by: disposeBag)
         
-        //        listView.listTableView.rx.itemSelected
-        //            .subscribe(onNext: { [weak self] indexPath in
-        //                self?.listView.listTableView.deselectRow(at: indexPath, animated: true)
-        //                self?.saveReadNewsAction.onNext(indexPath.row)
-        //            }).disposed(by: disposeBag)
+        todoListView.tableView.rx.itemDeleted
+            .subscribe(onNext: { [weak self] indexPath in
+                guard let self = self else { return }
+                guard let item = try? self.todoListView.tableView.rx.model(at: indexPath) as TodoItem else {
+                    return
+                }
+                self.deleteAction.onNext(item)
+            }).disposed(by: disposeBag)
+
     }
     
     private func setBinding() {
-        // TODO: - 3) 뷰모델에서 state 받아서 뷰에 바인딩 하기
-        let input = TodoViewModel.Input(saveAction: saveAction, readAction: readAction, updateAction: updateAction, deleteAction: deleteAction)
+        let input = TodoViewModel.Input(saveAction: saveAction, readAction: readAction, updateAction: updateAction, deleteAction: deleteAction, filterAction: filterAction)
         
         let output = todoViewModel.transform(input: input)
         
         output.todoItems
-            .bind { [weak self] todoItems in
-                guard let self = self else { return }
+            .observe(on: MainScheduler.instance)
+            .bind(to: todoListView.tableView.rx.items(cellIdentifier: "TodoListCell", cellType: TodoListViewCell.self)) { index, item, cell in
+                cell.titleLabel.text = item.title
+                cell.doneSwitch.isOn = item.done
+                
+                cell.switchChangedEvent
+                    .subscribe(onNext: { [weak self] isOn in
+                        guard let self = self else { return }
+                        var updatedItem = item
+                        updatedItem.done = isOn
+                        self.updateAction.onNext(updatedItem)
+                    })
+                    .disposed(by: cell.disposeBag)
             }
             .disposed(by: disposeBag)
         
         output.isLoading
-            .bind { [weak self] isLoading in
+            .observe(on: MainScheduler.instance)
+            .subscribe { [weak self] bool in
                 guard let self = self else { return }
-            }
-            .disposed(by: disposeBag)
+                bool ? self.todoListView.indicatorView.startAnimating() : self.todoListView.indicatorView.stopAnimating()
+            }.disposed(by: disposeBag)
         
         output.noMoreData
-            .bind { [weak self] _ in
+            .observe(on: MainScheduler.instance)
+            .bind { [weak self] bool in
                 guard let self = self else { return }
-                self.todoListView.tableView.tableFooterView?.isHidden = false
+                self.todoListView.tableView.tableFooterView?.isHidden = bool ? false : true
             }
             .disposed(by: disposeBag)
         
         output.coreDataError
+            .observe(on: MainScheduler.instance)
             .bind { [weak self] errorMsg in
                 guard let self = self else { return }
+                self.showAlert(message: errorMsg)
             }
             .disposed(by: disposeBag)
+    }
+    
+    
+    private func showFilterView() {
+        let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+    
+        let allAction = UIAlertAction(title: "전체", style: .default) { _ in
+            self.filterAction.onNext(.all)
+            self.navigationItem.rightBarButtonItems = [self.addButton, self.filterButton]
+        }
         
-        output.refreshTrigger
-            .bind { [weak self] _ in
-                guard let self = self else { return }
-                self.todoListView.tableView.reloadData()
-            }
-            .disposed(by: disposeBag)
+        let doneAction = UIAlertAction(title: "완료", style: .default) { _ in
+            self.filterAction.onNext(.done)
+            self.navigationItem.rightBarButtonItems = [self.filterButton]
+        }
         
+        let cancelAction = UIAlertAction(title: "취소", style: .cancel)
+        
+        alert.addAction(allAction)
+        alert.addAction(doneAction)
+        alert.addAction(cancelAction)
+        
+        self.present(alert, animated: true)
     }
     
     private func addButtonTapped() {
-        let alertController = UIAlertController(title: "할 일 추가", message: "추가할 내용을 입력하세요.", preferredStyle: .alert)
+        let alert = UIAlertController(title: "할 일 추가", message: "추가할 내용을 입력하세요.", preferredStyle: .alert)
         
-        let addAction = UIAlertAction(title: "추가", style: .default) { _ in
-            if let text = alertController.textFields?.first?.text, !text.isEmpty {
+        let addAction = UIAlertAction(title: "확인", style: .default) { _ in
+            if let text = alert.textFields?.first?.text, !text.isEmpty {
                 let item = TodoItem(uuid: UUID(), title: text, done: false)
                 self.saveAction.onNext((item))
             }
@@ -132,12 +176,39 @@ class TodoListViewController: UIViewController {
         
         let cancelAction = UIAlertAction(title: "취소", style: .cancel, handler: nil)
         
-        alertController.addTextField()
-        alertController.addAction(addAction)
-        alertController.addAction(cancelAction)
-        
-        present(alertController, animated: true, completion: nil)
+        alert.addTextField()
+        alert.addAction(addAction)
+        alert.addAction(cancelAction)
+        present(alert, animated: true, completion: nil)
     }
     
+    private func todoItemTapped(item: TodoItem) {
+        let alert = UIAlertController(title: "할 일 수정", message: "내용을 수정하세요.", preferredStyle: .alert)
+        
+        alert.addTextField { textField in
+            textField.text = item.title
+        }
+        
+        let saveAction = UIAlertAction(title: "확인", style: .default) { _ in
+            if let updatedText = alert.textFields?.first?.text, !updatedText.isEmpty {
+                var updatedItem = item
+                updatedItem.title = updatedText
+                self.updateAction.onNext(updatedItem)
+            }
+        }
+        
+        let cancelAction = UIAlertAction(title: "취소", style: .cancel, handler: nil)
+        
+        alert.addAction(saveAction)
+        alert.addAction(cancelAction)
+        present(alert, animated: true)
+    }
+    
+    private func showAlert(message: String) {
+        let alert = UIAlertController(title: "에러", message: message, preferredStyle: .alert)
+        let okAction = UIAlertAction(title: "확인", style: .default, handler: nil)
+        alert.addAction(okAction)
+        present(alert, animated: true)
+    }
 }
 

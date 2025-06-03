@@ -24,6 +24,7 @@ struct TodoCoreData: TodoCoreDataProtocol {
             return .failure(.EntityNotFound("CleanTodoList"))
         }
         let todoItem = NSManagedObject(entity: entity, insertInto: viewContext)
+        todoItem.setValue(item.uuid, forKey: "uuid")
         todoItem.setValue(item.title, forKey: "title")
         todoItem.setValue(item.done, forKey: "done")
         do {
@@ -39,7 +40,8 @@ struct TodoCoreData: TodoCoreDataProtocol {
         do {
             let result = try viewContext.fetch(fetchRequest)
             let todoItemList: [TodoItem] = result.compactMap { item in
-                guard let title = item.title, let uuid = item.id else { return nil }
+                guard let title = item.title, let uuid = item.uuid else {
+                    return nil }
                 return TodoItem(uuid: uuid, title: title, done: item.done)
             }
             return .success(todoItemList)
@@ -50,7 +52,7 @@ struct TodoCoreData: TodoCoreDataProtocol {
 
     func updateTodoItem(item: TodoItem) -> Result<Bool, CoreDataError> {
         let fetchRequest: NSFetchRequest<CleanTodoList> = CleanTodoList.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "id == %@", item.uuid.uuidString)
+        fetchRequest.predicate = NSPredicate(format: "uuid == %@", item.uuid.uuidString)
         
         do {
             let results = try viewContext.fetch(fetchRequest)
@@ -70,7 +72,7 @@ struct TodoCoreData: TodoCoreDataProtocol {
     
     func deleteTodoItem(item: TodoItem) -> Result<Bool, CoreDataError> {
         let fetchRequest: NSFetchRequest<CleanTodoList> = CleanTodoList.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "id == %@", item.uuid.uuidString)
+        fetchRequest.predicate = NSPredicate(format: "uuid == %@", item.uuid.uuidString)
         
         do {
             let result = try viewContext.fetch(fetchRequest)

@@ -16,6 +16,11 @@ class TodoListView: UIView {
         return tableView
     }()
     
+    let indicatorView: UIActivityIndicatorView = {
+        let indicator = UIActivityIndicatorView(style: .large)
+        return indicator
+    }()
+    
     let bottomView: UIView = {
         let view = UIView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 60))
         let label = UILabel()
@@ -45,18 +50,20 @@ class TodoListView: UIView {
     // MARK: - Method
     private func setUI(){
         backgroundColor = .systemBackground
-    
-        addSubview(tableView)
-        self.tableView.tableFooterView = self.bottomView
-        self.tableView.tableFooterView?.isHidden = true
         
-        tableView.snp.makeConstraints { make in
-            make.top.equalTo(self.safeAreaLayoutGuide.snp.top)
-            make.leading.trailing.equalToSuperview()
-            make.bottom.equalToSuperview().offset(-80)
+        addSubview(tableView)
+        addSubview(indicatorView)
+        
+        tableView.snp.makeConstraints { 
+            $0.top.equalTo(self.safeAreaLayoutGuide.snp.top)
+            $0.bottom.leading.trailing.equalToSuperview()
         }
         
-    
+        indicatorView.snp.makeConstraints {
+            $0.centerX.equalToSuperview()
+            $0.centerY.equalToSuperview()
+        }
+        
     }
 }
 

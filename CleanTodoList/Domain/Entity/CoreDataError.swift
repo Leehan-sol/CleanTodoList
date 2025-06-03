@@ -8,6 +8,7 @@
 import Foundation
 
 enum CoreDataError: Error {
+    case noData
     case EntityNotFound(String)
     case SaveError(String)
     case ReadError(String)
@@ -16,6 +17,8 @@ enum CoreDataError: Error {
     
     var description: String {
         switch self {
+        case .noData:
+            "데이터가 없음"
         case .EntityNotFound(let description):
             "CoreData Entity 찾을 수 없음, \(description)"
         case .SaveError(let description):

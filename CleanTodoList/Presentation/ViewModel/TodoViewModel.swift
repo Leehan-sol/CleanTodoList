@@ -15,16 +15,19 @@ protocol TodoViewModelProtocol {
 
 class TodoViewModel: TodoViewModelProtocol {
     private let useCase: TodoUseCase
+    private var currentPage = 1
+    private var currentFilterType: FilterType = .all
+    private var allTodoItems: [TodoItem] = [TodoItem]()
     
     private let todoItems: BehaviorSubject<[TodoItem]> = BehaviorSubject(value: [])
     private let isLoading: BehaviorSubject<Bool> = BehaviorSubject(value: false)
     private let noMoreData: BehaviorSubject<Bool> = BehaviorSubject(value: false)
     private let coreDataError: PublishSubject<String> = PublishSubject()
-    private let refreshTrigger: PublishSubject<Void> = PublishSubject()
     private let disposeBag = DisposeBag()
     
     init(useCase: TodoUseCase) {
         self.useCase = useCase
+        self.readTodoItems()
     }
     
     struct Input {
@@ -32,6 +35,7 @@ class TodoViewModel: TodoViewModelProtocol {
         let readAction: PublishSubject<Void>
         let updateAction: PublishSubject<TodoItem>
         let deleteAction: PublishSubject<TodoItem>
+        let filterAction: PublishSubject<FilterType>
     }
     
     struct Output {
@@ -39,11 +43,9 @@ class TodoViewModel: TodoViewModelProtocol {
         let isLoading: BehaviorSubject<Bool>
         let noMoreData: BehaviorSubject<Bool>
         let coreDataError: PublishSubject<String>
-        let refreshTrigger: PublishSubject<Void>
     }
     
     func transform(input: Input) -> Output {
-        // TODO: - 2) 뷰컨 액션 받아서 할 행동 정의
         input.saveAction
             .bind(onNext: { [weak self] item in
                 guard let self = self else { return }
@@ -53,9 +55,7 @@ class TodoViewModel: TodoViewModelProtocol {
         
         input.readAction
             .bind(onNext: {
-                // TODO: - 페이지네이션
-                let result = self.useCase.readTodoList()
-                self.handleListResult(result: result)
+                self.readTodoItems()
             }).disposed(by: disposeBag)
         
         input.updateAction
@@ -72,13 +72,27 @@ class TodoViewModel: TodoViewModelProtocol {
                 self.handleResult(result: result)
             }).disposed(by: disposeBag)
         
-        return Output(todoItems: todoItems, isLoading: isLoading, noMoreData: noMoreData, coreDataError: coreDataError, refreshTrigger: refreshTrigger)
+        input.filterAction
+            .bind(onNext: { [weak self] type in
+                guard let self = self else { return }
+                self.currentFilterType = type
+                self.showFilterData(type: type, items: allTodoItems)
+            }).disposed(by: disposeBag)
+          
+        return Output(todoItems: todoItems, isLoading: isLoading, noMoreData: noMoreData, coreDataError: coreDataError)
+    }
+    
+    private func readTodoItems() {
+        self.isLoading.onNext(true)
+        let result = useCase.readTodoList()
+        handleListResult(result: result)
+        self.isLoading.onNext(false)
     }
     
     private func handleResult(result: Result<Bool, CoreDataError>) {
         switch result {
         case .success:
-            break
+            self.readTodoItems()
         case .failure(let error):
             self.coreDataError.onNext(error.description)
         }
@@ -86,12 +100,24 @@ class TodoViewModel: TodoViewModelProtocol {
  
     private func handleListResult(result: Result<[TodoItem], CoreDataError>) {
         switch result {
-        case .success:
+        case .success(let items):
+            // TODO: - 페이지네이션, noMoreData.onNext
+            allTodoItems = items
+            self.showFilterData(type: currentFilterType, items: items)
             break
-            // TODO: - 리스트 업데이트해서 todoItems.onNext 해야함
         case .failure(let error):
             self.coreDataError.onNext(error.description)
         }
     }
+    
+    private func showFilterData(type: FilterType, items: [TodoItem]) {
+        switch type {
+        case .all:
+            self.todoItems.onNext(items)
+        case .done:
+            self.todoItems.onNext(items.filter{ $0.done == true })
+        }
+    }
+    
 }
 
