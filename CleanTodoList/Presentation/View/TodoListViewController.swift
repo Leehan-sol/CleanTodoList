@@ -58,15 +58,13 @@ class TodoListViewController: UIViewController {
             .bind { [weak self] in
                 guard let self = self else { return }
                 self.addButtonTapped()
-            }
-            .disposed(by: disposeBag)
+            }.disposed(by: disposeBag)
         
         filterButton.rx.tap
             .bind { [weak self] in
                 guard let self = self else { return }
                 self.showFilterView()
-            }
-            .disposed(by: disposeBag)
+            }.disposed(by: disposeBag)
         
         todoListView.tableView.rx.bottomReached
             .skip(1)
@@ -81,8 +79,7 @@ class TodoListViewController: UIViewController {
             .subscribe(onNext: { [weak self] selectedItem in
                 guard let self = self else { return }
                 self.todoItemTapped(item: selectedItem)
-            })
-            .disposed(by: disposeBag)
+            }).disposed(by: disposeBag)
         
         todoListView.tableView.rx.itemDeleted
             .subscribe(onNext: { [weak self] indexPath in
@@ -114,8 +111,7 @@ class TodoListViewController: UIViewController {
                         self.updateAction.onNext(updatedItem)
                     })
                     .disposed(by: cell.disposeBag)
-            }
-            .disposed(by: disposeBag)
+            }.disposed(by: disposeBag)
         
         output.isLoading
             .observe(on: MainScheduler.instance)
@@ -129,16 +125,14 @@ class TodoListViewController: UIViewController {
             .bind { [weak self] bool in
                 guard let self = self else { return }
                 self.todoListView.tableView.tableFooterView?.isHidden = bool ? false : true
-            }
-            .disposed(by: disposeBag)
+            }.disposed(by: disposeBag)
         
         output.coreDataError
             .observe(on: MainScheduler.instance)
             .bind { [weak self] errorMsg in
                 guard let self = self else { return }
                 self.showAlert(message: errorMsg)
-            }
-            .disposed(by: disposeBag)
+            }.disposed(by: disposeBag)
     }
     
     
