@@ -10,7 +10,7 @@ import CoreData
 
 protocol TodoCoreDataProtocol {
     func saveTodoItem(item: TodoItem) -> Result<Bool, CoreDataError>
-    func readTodoList() -> Result<[TodoItem], CoreDataError>
+    func readTodoList(page: Int, limit: Int) -> Result<[TodoItem], CoreDataError>
     func updateTodoItem(item: TodoItem) -> Result<Bool, CoreDataError>
     func deleteTodoItem(item: TodoItem) -> Result<Bool, CoreDataError>
 }
@@ -27,6 +27,8 @@ struct TodoCoreData: TodoCoreDataProtocol {
         todoItem.setValue(item.uuid, forKey: "uuid")
         todoItem.setValue(item.title, forKey: "title")
         todoItem.setValue(item.done, forKey: "done")
+        todoItem.setValue(item.date, forKey: "date")
+        
         do {
             try viewContext.save()
             return .success(true)
@@ -35,21 +37,27 @@ struct TodoCoreData: TodoCoreDataProtocol {
         }
     }
     
-    func readTodoList() -> Result<[TodoItem], CoreDataError> {
+    func readTodoList(page: Int, limit: Int) -> Result<[TodoItem], CoreDataError> {
         let fetchRequest: NSFetchRequest<CleanTodoList> = CleanTodoList.fetchRequest()
+        fetchRequest.fetchLimit = limit
+        fetchRequest.fetchOffset = (page - 1) * limit
+        
+        let sortDescriptor = NSSortDescriptor(key: "date", ascending: false)
+        fetchRequest.sortDescriptors = [sortDescriptor]
+        
         do {
             let result = try viewContext.fetch(fetchRequest)
             let todoItemList: [TodoItem] = result.compactMap { item in
-                guard let title = item.title, let uuid = item.uuid else {
+                guard let title = item.title, let uuid = item.uuid, let date = item.date else {
                     return nil }
-                return TodoItem(uuid: uuid, title: title, done: item.done)
+                return TodoItem(uuid: uuid, title: title, done: item.done, date: date)
             }
             return .success(todoItemList)
         } catch {
             return .failure(.ReadError(error.localizedDescription))
         }
     }
-
+    
     func updateTodoItem(item: TodoItem) -> Result<Bool, CoreDataError> {
         let fetchRequest: NSFetchRequest<CleanTodoList> = CleanTodoList.fetchRequest()
         fetchRequest.predicate = NSPredicate(format: "uuid == %@", item.uuid.uuidString)
@@ -59,10 +67,9 @@ struct TodoCoreData: TodoCoreDataProtocol {
             guard let itemToUpdate = results.first else {
                 return .failure(.EntityNotFound("CleanTodoList with id \(item.uuid.uuidString)"))
             }
-            
             itemToUpdate.title = item.title
             itemToUpdate.done = item.done
-            
+            itemToUpdate.date = item.date
             try viewContext.save()
             return .success(true)
         } catch {

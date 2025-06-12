@@ -11,4 +11,5 @@ struct TodoItem {
     let uuid: UUID
     var title: String
     var done: Bool
+    var date: Date
 }

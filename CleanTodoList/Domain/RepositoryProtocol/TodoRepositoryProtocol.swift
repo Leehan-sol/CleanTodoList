@@ -9,7 +9,7 @@ import Foundation
 
 protocol TodoRepositoryProtocol {
     func saveTodoItem(item: TodoItem) -> Result<Bool, CoreDataError>
-    func readTodoList() -> Result<[TodoItem], CoreDataError>
+    func readTodoList(page: Int, limit: Int) -> Result<[TodoItem], CoreDataError>
     func updateTodoItem(item: TodoItem) -> Result<Bool, CoreDataError>
     func deleteTodoItem(item: TodoItem) -> Result<Bool, CoreDataError>
 }

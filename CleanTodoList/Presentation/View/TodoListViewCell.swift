@@ -22,6 +22,14 @@ class TodoListViewCell: UITableViewCell {
         return doneSwitch
     }()
     
+    let dateLabel: UILabel = {
+        let label = UILabel()
+        label.text = "작성일"
+        label.font = UIFont.systemFont(ofSize: 10)
+        label.textColor = UIColor.lightGray
+        return label
+    }()
+    
     let switchChangedEvent: PublishSubject<Bool> = PublishSubject<Bool>()
     var disposeBag = DisposeBag()
     
@@ -42,7 +50,7 @@ class TodoListViewCell: UITableViewCell {
     }
     
     private func setUI() {
-        let subviews = [titleLabel, doneSwitch]
+        let subviews = [titleLabel, doneSwitch, dateLabel]
         
         subviews.forEach { contentView.addSubview($0) }
         
@@ -51,10 +59,22 @@ class TodoListViewCell: UITableViewCell {
             $0.leading.trailing.equalToSuperview().inset(20)
         }
         
-        doneSwitch.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().inset(16)
-            make.centerY.equalToSuperview()
+        doneSwitch.snp.makeConstraints {
+            $0.trailing.equalToSuperview().inset(16)
+            $0.centerY.equalToSuperview()
         }
+        
+        dateLabel.snp.makeConstraints {
+            $0.top.equalTo(titleLabel.snp.bottom).offset(5)
+            $0.leading.equalTo(titleLabel.snp.leading)
+            $0.bottom.equalToSuperview().offset(-5)
+        }
+    }
+    
+    func configure(item: TodoItem) {
+        titleLabel.text = item.title
+        doneSwitch.isOn = item.done
+        dateLabel.text = item.date.toDisplayString()
     }
     
     private func setBinding() {

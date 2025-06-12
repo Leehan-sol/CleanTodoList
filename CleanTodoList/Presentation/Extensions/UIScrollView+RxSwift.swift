@@ -10,7 +10,6 @@ import RxSwift
 
 extension Reactive where Base: UIScrollView {
     
-    // 바닥 감지
     var bottomReached: Observable<Void> {
         return contentOffset
             .distinctUntilChanged()

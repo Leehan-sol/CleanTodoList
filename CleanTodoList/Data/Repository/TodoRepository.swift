@@ -9,26 +9,26 @@ import Foundation
 
 struct TodoRepository: TodoRepositoryProtocol {
    
-    private let coreDataManager: TodoCoreDataProtocol
+    private let coreDataStorage: TodoCoreDataProtocol
     
     init(coreDataManager: TodoCoreDataProtocol) {
-        self.coreDataManager = coreDataManager
+        self.coreDataStorage = coreDataManager
     }
     
     func saveTodoItem(item: TodoItem) -> Result<Bool, CoreDataError> {
-        coreDataManager.saveTodoItem(item: item)
+        coreDataStorage.saveTodoItem(item: item)
     }
     
-    func readTodoList() -> Result<[TodoItem], CoreDataError> {
-        coreDataManager.readTodoList()
+    func readTodoList(page: Int, limit: Int) -> Result<[TodoItem], CoreDataError> {
+        coreDataStorage.readTodoList(page: page, limit: limit)
     }
     
     func updateTodoItem(item: TodoItem) -> Result<Bool, CoreDataError> {
-        coreDataManager.updateTodoItem(item: item)
+        coreDataStorage.updateTodoItem(item: item)
     }
     
     func deleteTodoItem(item: TodoItem) -> Result<Bool, CoreDataError> {
-        coreDataManager.deleteTodoItem(item: item)
+        coreDataStorage.deleteTodoItem(item: item)
     }
     
 }
