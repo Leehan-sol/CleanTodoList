@@ -50,8 +50,8 @@ class TodoListViewController: UIViewController {
     private func setUI() {
         navigationItem.rightBarButtonItems = [addButton, filterButton]
         todoListView.placeholderView.isHidden = true
-        todoListView.tableView.refreshControl = todoListView.refreshControl
         todoListView.tableView.register(TodoListViewCell.self, forCellReuseIdentifier: "TodoListCell")
+        todoListView.tableView.refreshControl = todoListView.refreshControl
         todoListView.tableView.tableFooterView = todoListView.bottomView
         todoListView.tableView.tableFooterView?.isHidden = true
         todoListView.tableView.rowHeight = UITableView.automaticDimension
@@ -62,20 +62,20 @@ class TodoListViewController: UIViewController {
         addButton.rx.tap
             .bind { [weak self] in
                 guard let self = self else { return }
-                self.addButtonTapped()
+                addButtonTapped()
             }.disposed(by: disposeBag)
         
         filterButton.rx.tap
             .bind { [weak self] in
                 guard let self = self else { return }
-                self.showFilterView()
-                self.todoListView.tableView.tableFooterView?.isHidden = true
+                showFilterView()
+                todoListView.tableView.tableFooterView?.isHidden = true
             }.disposed(by: disposeBag)
         
         todoListView.refreshControl.rx.controlEvent(.valueChanged)
             .bind { [weak self] in
                 guard let self = self else { return }
-                self.refreshAction.onNext(())
+                refreshAction.onNext(())
             }.disposed(by: disposeBag)
         
         todoListView.tableView.rx.bottomReached
@@ -83,21 +83,21 @@ class TodoListViewController: UIViewController {
             .throttle(RxTimeInterval.seconds(2), scheduler: MainScheduler.instance)
             .subscribe(onNext: { [weak self] in
                 guard let self = self else { return }
-                self.readAction.onNext(())
+                readAction.onNext(())
             }).disposed(by: disposeBag)
         
         todoListView.tableView.rx.modelSelected(TodoItem.self)
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] selectedItem in
                 guard let self = self else { return }
-                self.todoItemTapped(item: selectedItem)
+                todoItemTapped(item: selectedItem)
             }).disposed(by: disposeBag)
         
         todoListView.tableView.rx.itemDeleted
             .subscribe(onNext: { [weak self] indexPath in
                 guard let self = self else { return }
                 guard let item = try? self.todoListView.tableView.rx.model(at: indexPath) as TodoItem else { return }
-                self.deleteAction.onNext(item)
+                deleteAction.onNext(item)
             }).disposed(by: disposeBag)
         
     }
@@ -116,9 +116,9 @@ class TodoListViewController: UIViewController {
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] items in
                 guard let self = self else { return }
-                self.todoListView.placeholderView.isHidden = !items.isEmpty
-                if self.todoListView.refreshControl.isRefreshing {
-                    self.todoListView.refreshControl.endRefreshing()
+                todoListView.placeholderView.isHidden = !items.isEmpty
+                if todoListView.refreshControl.isRefreshing {
+                    todoListView.refreshControl.endRefreshing()
                 }
             })
             .disposed(by: disposeBag)
@@ -132,7 +132,7 @@ class TodoListViewController: UIViewController {
                         guard let self = self else { return }
                         var updatedItem = item
                         updatedItem.done = isOn
-                        self.updateAction.onNext(updatedItem)
+                        updateAction.onNext(updatedItem)
                     })
                     .disposed(by: cell.disposeBag)
             }.disposed(by: disposeBag)
@@ -141,21 +141,22 @@ class TodoListViewController: UIViewController {
             .observe(on: MainScheduler.instance)
             .subscribe { [weak self] bool in
                 guard let self = self else { return }
-                bool ? self.todoListView.indicatorView.startAnimating() : self.todoListView.indicatorView.stopAnimating()
+                bool ? todoListView.indicatorView.startAnimating() : todoListView.indicatorView.stopAnimating()
             }.disposed(by: disposeBag)
         
         output.noMoreData
             .observe(on: MainScheduler.instance)
             .bind { [weak self] bool in
                 guard let self = self else { return }
-                self.todoListView.tableView.tableFooterView?.isHidden = bool ? false : true
+                print("tableFooterView isHidden", bool)
+                todoListView.tableView.tableFooterView?.isHidden = bool ? false : true
             }.disposed(by: disposeBag)
         
         output.coreDataError
             .observe(on: MainScheduler.instance)
             .bind { [weak self] errorMsg in
                 guard let self = self else { return }
-                self.showAlert(message: errorMsg)
+                showAlert(message: errorMsg)
             }.disposed(by: disposeBag)
     }
     

@@ -19,8 +19,8 @@ struct TodoRepository: TodoRepositoryProtocol {
         coreDataStorage.saveTodoItem(item: item)
     }
     
-    func readTodoList(page: Int, limit: Int) -> Result<[TodoItem], CoreDataError> {
-        coreDataStorage.readTodoList(page: page, limit: limit)
+    func readTodoList(page: Int, limit: Int, type: FilterType) -> Result<[TodoItem], CoreDataError> {
+        coreDataStorage.readTodoList(page: page, limit: limit, type: type)
     }
     
     func updateTodoItem(item: TodoItem) -> Result<Bool, CoreDataError> {

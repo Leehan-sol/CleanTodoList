@@ -9,7 +9,7 @@ import Foundation
 
 protocol TodoUseCaseProtocol {
     func saveTodoItem(item: TodoItem) -> Result<Bool, CoreDataError>
-    func readTodoList(page: Int, limit: Int) -> Result<[TodoItem], CoreDataError>
+    func readTodoList(page: Int, limit: Int, type: FilterType) -> Result<[TodoItem], CoreDataError>
     func updateTodoItem(item: TodoItem) -> Result<Bool, CoreDataError>
     func deleteTodoItem(item: TodoItem) -> Result<Bool, CoreDataError>
 }
@@ -26,8 +26,8 @@ class TodoUseCase: TodoUseCaseProtocol {
         todoRepository.saveTodoItem(item: item)
     }
     
-    func readTodoList(page: Int, limit: Int) -> Result<[TodoItem], CoreDataError> {
-        todoRepository.readTodoList(page: page, limit: limit)
+    func readTodoList(page: Int, limit: Int, type: FilterType) -> Result<[TodoItem], CoreDataError> {
+        todoRepository.readTodoList(page: page, limit: limit, type: type)
     }
     
     func updateTodoItem(item: TodoItem) -> Result<Bool, CoreDataError> {

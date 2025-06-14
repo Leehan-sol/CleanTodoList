@@ -81,7 +81,7 @@ class TodoListViewCell: UITableViewCell {
         doneSwitch.rx.isOnChanged
             .subscribe(onNext: { [weak self] isOn in
                 guard let self = self else { return }
-                self.switchChangedEvent.onNext(isOn)
+                switchChangedEvent.onNext(isOn)
             }).disposed(by: disposeBag)
     }
     

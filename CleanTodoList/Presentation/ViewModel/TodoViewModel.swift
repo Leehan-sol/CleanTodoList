@@ -28,7 +28,7 @@ class TodoViewModel: TodoViewModelProtocol {
     
     init(useCase: TodoUseCase) {
         self.useCase = useCase
-        self.readTodoItems()
+        self.readTodoItems(type: currentFilterType)
     }
     
     struct Input {
@@ -52,57 +52,65 @@ class TodoViewModel: TodoViewModelProtocol {
         input.saveAction
             .bind(onNext: { [weak self] item in
                 guard let self = self else { return }
-                let result = self.useCase.saveTodoItem(item: item)
-                self.handleResult(action: .save, item: item, result: result)
+                let result = useCase.saveTodoItem(item: item)
+                handleResult(action: .save, item: item, result: result)
             }).disposed(by: disposeBag)
         
         input.readAction
-            .bind(onNext: {
-                self.readTodoItems()
+            .bind(onNext: { [weak self] _ in
+                guard let self = self else { return }
+                readTodoItems(type: currentFilterType)
             }).disposed(by: disposeBag)
         
         input.updateAction
             .bind(onNext: { [weak self] item in
                 guard let self = self else { return }
-                let result = self.useCase.updateTodoItem(item: item)
-                self.handleResult(action: .update, item: item, result: result)
+                let result = useCase.updateTodoItem(item: item)
+                handleResult(action: .update, item: item, result: result)
             }).disposed(by: disposeBag)
         
         input.deleteAction
             .bind(onNext: { [weak self] item in
                 guard let self = self else { return }
-                let result = self.useCase.deleteTodoItem(item: item)
-                self.handleResult(action: .delete, item: item, result: result)
+                let result = useCase.deleteTodoItem(item: item)
+                handleResult(action: .delete, item: item, result: result)
             }).disposed(by: disposeBag)
         
         input.filterAction
             .bind(onNext: { [weak self] type in
                 guard let self = self else { return }
-                self.currentFilterType = type
-                self.showFilterData(type: type, items: allTodoItems)
+                currentFilterType = type
+                refreshTodoItems(type: type)
             }).disposed(by: disposeBag)
         
         input.refreshAction
             .bind (onNext: { [weak self] _ in
                 guard let self = self else { return }
-                refreshTodoItems()
+                refreshTodoItems(type: currentFilterType)
             }).disposed(by: disposeBag)
         
         return Output(todoItems: todoItems, isLoading: isLoading, noMoreData: noMoreData, coreDataError: coreDataError)
     }
     
-    private func readTodoItems() {
+    private func readTodoItems(type: FilterType) {
         self.isLoading.onNext(true)
-        let result = useCase.readTodoList(page: currentPage, limit: limit)
+        let result = useCase.readTodoList(page: currentPage, limit: limit, type: type)
         handleListResult(result: result)
         self.isLoading.onNext(false)
+    }
+    
+    private func refreshTodoItems(type: FilterType) {
+        currentPage = 1
+        allTodoItems = []
+        readTodoItems(type: type)
+        noMoreData.onNext(false)
     }
     
     private func handleListResult(result: Result<[TodoItem], CoreDataError>) {
         switch result {
         case .success(let items):
             allTodoItems += items
-            self.showFilterData(type: currentFilterType, items: allTodoItems)
+            self.todoItems.onNext(allTodoItems)
             if items.count == 0 && currentPage != 1 && currentFilterType != .done {
                 self.noMoreData.onNext(true)
             } else {
@@ -118,7 +126,7 @@ class TodoViewModel: TodoViewModelProtocol {
         case .success:
             switch action {
             case .save:
-                refreshTodoItems()
+                refreshTodoItems(type: currentFilterType)
             case .update:
                 if let index = allTodoItems.firstIndex(where: { $0.uuid == item.uuid }) {
                     allTodoItems[index] = item
@@ -127,29 +135,12 @@ class TodoViewModel: TodoViewModelProtocol {
             case .delete:
                 allTodoItems.removeAll(where: { $0.uuid == item.uuid })
             }
-            showFilterData(type: currentFilterType, items: allTodoItems)
+            todoItems.onNext(allTodoItems)
             noMoreData.onNext(false)
         case .failure(let error):
             self.coreDataError.onNext(error.description)
         }
     }
-    
-    private func refreshTodoItems() {
-        currentPage = 1
-        allTodoItems = []
-        readTodoItems()
-        noMoreData.onNext(false)
-    }
-    
-    private func showFilterData(type: FilterType, items: [TodoItem]) {
-        switch type {
-        case .all:
-            self.todoItems.onNext(items)
-        case .done:
-            // TODO: 모든 할일 중에 done == true인 할일만 로드하는 useCase 메소드 생성
-            self.todoItems.onNext(items.filter{ $0.done == true })
-        }
-    }
-    
+
 }
 

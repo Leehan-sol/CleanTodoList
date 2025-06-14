@@ -10,7 +10,7 @@ import CoreData
 
 protocol TodoCoreDataProtocol {
     func saveTodoItem(item: TodoItem) -> Result<Bool, CoreDataError>
-    func readTodoList(page: Int, limit: Int) -> Result<[TodoItem], CoreDataError>
+    func readTodoList(page: Int, limit: Int, type: FilterType) -> Result<[TodoItem], CoreDataError>
     func updateTodoItem(item: TodoItem) -> Result<Bool, CoreDataError>
     func deleteTodoItem(item: TodoItem) -> Result<Bool, CoreDataError>
 }
@@ -37,13 +37,14 @@ struct TodoCoreData: TodoCoreDataProtocol {
         }
     }
     
-    func readTodoList(page: Int, limit: Int) -> Result<[TodoItem], CoreDataError> {
+    func readTodoList(page: Int, limit: Int, type: FilterType) -> Result<[TodoItem], CoreDataError> {
         let fetchRequest: NSFetchRequest<CleanTodoList> = CleanTodoList.fetchRequest()
         fetchRequest.fetchLimit = limit
         fetchRequest.fetchOffset = (page - 1) * limit
         
         let sortDescriptor = NSSortDescriptor(key: "date", ascending: false)
         fetchRequest.sortDescriptors = [sortDescriptor]
+        fetchRequest.predicate = type == .all ? nil : NSPredicate(format: "done == true")
         
         do {
             let result = try viewContext.fetch(fetchRequest)
