@@ -43,7 +43,6 @@ class TodoViewModel: TodoViewModelProtocol {
     struct Output {
         let todoItems: BehaviorSubject<[TodoItem]>
         let isLoading: BehaviorSubject<Bool>
-        // TODO: - BottomView 이슈 해결
         let noMoreData: BehaviorSubject<Bool>
         let coreDataError: PublishSubject<String>
     }
@@ -111,7 +110,7 @@ class TodoViewModel: TodoViewModelProtocol {
         case .success(let items):
             allTodoItems += items
             self.todoItems.onNext(allTodoItems)
-            if items.count == 0 && currentPage != 1 && currentFilterType != .done {
+            if items.count == 0 && currentPage != 1 {
                 self.noMoreData.onNext(true)
             } else {
                 self.currentPage += 1
@@ -128,10 +127,13 @@ class TodoViewModel: TodoViewModelProtocol {
             case .save:
                 refreshTodoItems(type: currentFilterType)
             case .update:
-                if let index = allTodoItems.firstIndex(where: { $0.uuid == item.uuid }) {
+                if currentFilterType == .all {
+                    guard let index = allTodoItems.firstIndex(where: { $0.uuid == item.uuid }) else { return }
                     allTodoItems[index] = item
                     allTodoItems.sort { $0.date > $1.date }
-                }
+                  } else if currentFilterType == .done {
+                      refreshTodoItems(type: currentFilterType)
+                  }
             case .delete:
                 allTodoItems.removeAll(where: { $0.uuid == item.uuid })
             }
@@ -141,6 +143,6 @@ class TodoViewModel: TodoViewModelProtocol {
             self.coreDataError.onNext(error.description)
         }
     }
-
+    
 }
 
