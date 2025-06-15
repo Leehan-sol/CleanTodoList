@@ -13,13 +13,16 @@ extension Reactive where Base: UIScrollView {
     var bottomReached: Observable<Void> {
         return contentOffset
             .distinctUntilChanged()
-            .map{ (offset : CGPoint) in
-                let height = self.base.frame.size.height
-                let contentYOffset = offset.y
-                let distanceFromBottom = self.base.contentSize.height - contentYOffset
-                return distanceFromBottom < height
+            .map { offset in
+                let scrollView = self.base
+                let visibleHeight = scrollView.frame.size.height
+                let contentHeight = scrollView.contentSize.height
+                let y = offset.y + visibleHeight
+                let threshold: CGFloat = 20
+                return contentHeight > visibleHeight && y >= contentHeight - threshold
             }
-            .filter{ $0 == true }.map{ _ in }
+            .filter { $0 == true }
+            .map { _ in }
     }
     
 }
