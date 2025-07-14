@@ -1,13 +1,14 @@
 //
-//  CleanTodoListTests.swift
+//  TodoRepositoryTests.swift
 //  CleanTodoListTests
 //
-//  Created by Apple on 6/25/25.
+//  Created by hansol on 2025/07/14.
 //
 
 import XCTest
+@testable import CleanTodoList
 
-final class CleanTodoListTests: XCTestCase {
+final class TodoRepositoryTests: XCTestCase {
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
@@ -27,7 +28,7 @@ final class CleanTodoListTests: XCTestCase {
 
     func testPerformanceExample() throws {
         // This is an example of a performance test case.
-        measure {
+        self.measure {
             // Put the code you want to measure the time of here.
         }
     }
