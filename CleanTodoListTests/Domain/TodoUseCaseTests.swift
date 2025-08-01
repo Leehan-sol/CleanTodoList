@@ -25,10 +25,13 @@ final class TodoUseCaseTests: XCTestCase {
     }
     
     func test_saveTodoItem() {
+        // Given
         let item = TodoItem(uuid: UUID(), title: "저장 테스트", done: false, date: Date())
         
+        // When
         let result = useCase.saveTodoItem(item: item)
         
+        // Then
         switch result {
         case .success(let success):
             XCTAssertTrue(success)
@@ -39,14 +42,17 @@ final class TodoUseCaseTests: XCTestCase {
     }
     
     func test_readTodoList() {
+        // Given
         let expectedItems = [
             TodoItem(uuid: UUID(), title: "테스트1", done: false, date: Date()),
             TodoItem(uuid: UUID(), title: "테스트2", done: false, date: Date())
         ]
         mockRepository.readResult = .success(expectedItems)
         
+        // When
         let result = useCase.readTodoList(page: 1, limit: 10, type: .all)
         
+        // Then
         switch result {
         case .success(let items):
             XCTAssertEqual(items.count, expectedItems.count)
@@ -57,13 +63,18 @@ final class TodoUseCaseTests: XCTestCase {
     }
     
     func test_updateTodoItem() {
+        // Given
+        let item = TodoItem(uuid: UUID(), title: "업데이트 아이템", done: false, date: Date())
         mockRepository.updateResult = .success(true)
-        let item = TodoItem(uuid: UUID(), title: "테스트", done: false, date: Date())
         
+        // When
         let result = useCase.updateTodoItem(item: item)
         
+        // Then
         switch result {
         case .success(let success):
+            XCTAssertTrue(mockRepository.isUpdateCalled)
+            XCTAssertEqual(mockRepository.updateItemParam?.title, "업데이트 아이템")
             XCTAssertTrue(success)
         case .failure:
             XCTFail("업데이트 실패")
@@ -71,13 +82,15 @@ final class TodoUseCaseTests: XCTestCase {
     }
     
     func test_deleteTodoItem() {
+        let item = TodoItem(uuid: UUID(), title: "삭제 아이템", done: false, date: Date())
         mockRepository.deleteResult = .success(true)
-        let item = TodoItem(uuid: UUID(), title: "테스트", done: false, date: Date())
         
         let result = useCase.deleteTodoItem(item: item)
         
         switch result {
         case .success(let success):
+            XCTAssertTrue(mockRepository.isDeleteCalled)
+            XCTAssertEqual(mockRepository.deleteItemParam?.title, "삭제 아이템")
             XCTAssertTrue(success)
         case .failure:
             XCTFail("삭제 실패")
