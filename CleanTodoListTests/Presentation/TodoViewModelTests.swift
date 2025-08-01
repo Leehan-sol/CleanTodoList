@@ -9,7 +9,18 @@ import XCTest
 @testable import CleanTodoList
 
 final class TodoViewModelTests: XCTestCase {
-
+    private var mockTodoUseCase: TodoUseCaseProtocol!
+    private var viewModel: TodoViewModelProtocol!
+    
+    override func setUp() {
+        mockTodoUseCase = MockTodoUseCase()
+        viewModel = TodoViewModel(useCase: mockTodoUseCase)
+    }
+    
+    override func tearDown() {
+        super.tearDown()
+    }
+    
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
     }

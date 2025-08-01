@@ -14,7 +14,7 @@ protocol TodoViewModelProtocol {
 }
 
 class TodoViewModel: TodoViewModelProtocol {
-    private let useCase: TodoUseCase
+    private let useCase: TodoUseCaseProtocol
     private var currentPage = 1
     private let limit = 20
     private var currentFilterType: FilterType = .all
@@ -26,7 +26,7 @@ class TodoViewModel: TodoViewModelProtocol {
     private let coreDataError: PublishSubject<String> = PublishSubject()
     private let disposeBag = DisposeBag()
     
-    init(useCase: TodoUseCase) {
+    init(useCase: TodoUseCaseProtocol) {
         self.useCase = useCase
         self.readTodoItems(type: currentFilterType)
     }
