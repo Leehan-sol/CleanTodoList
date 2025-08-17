@@ -15,8 +15,10 @@ final class MockTodoRepository: TodoRepositoryProtocol {
     var deleteResult: Result<Bool, CoreDataError> = .success(true)
     
     var savedItems: [TodoItem] = []
+    
     var isUpdateCalled = false
     var updateItemParam: TodoItem?
+    
     var isDeleteCalled = false
     var deleteItemParam: TodoItem?
     

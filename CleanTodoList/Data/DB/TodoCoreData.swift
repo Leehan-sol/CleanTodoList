@@ -90,7 +90,7 @@ struct TodoCoreData: TodoCoreDataProtocol {
             try viewContext.save()
             return .success(true)
         } catch {
-            return .failure(.DeleteError(error.localizedDescription))
+            return .failure(.deleteError(error.localizedDescription))
         }
     }
     

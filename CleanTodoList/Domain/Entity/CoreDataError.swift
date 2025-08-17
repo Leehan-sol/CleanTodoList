@@ -13,7 +13,7 @@ enum CoreDataError: Error {
     case SaveError(String)
     case ReadError(String)
     case updateError(String)
-    case DeleteError(String)
+    case deleteError(String)
     
     var description: String {
         switch self {
@@ -27,7 +27,7 @@ enum CoreDataError: Error {
             "읽기 실패, \(description)"
         case .updateError(let description):
             "수정 실패, \(description)"
-        case .DeleteError(let description):
+        case .deleteError(let description):
             "삭제 실패, \(description)"
         }
     }

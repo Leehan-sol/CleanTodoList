@@ -9,8 +9,8 @@ import XCTest
 @testable import CleanTodoList
 
 final class TodoUseCaseTests: XCTestCase {
-    var mockRepository: MockTodoRepository!
-    var useCase: TodoUseCase!
+    private var mockRepository: MockTodoRepository!
+    private var useCase: TodoUseCase!
 
     override func setUp() {
         super.setUp()
@@ -19,9 +19,9 @@ final class TodoUseCaseTests: XCTestCase {
     }
 
     override func tearDown() {
+        super.tearDown()
         mockRepository = nil
         useCase = nil
-        super.tearDown()
     }
     
     func test_saveTodoItem() {
