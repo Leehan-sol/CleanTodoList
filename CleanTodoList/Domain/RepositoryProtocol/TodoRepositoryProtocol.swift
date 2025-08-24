@@ -6,10 +6,11 @@
 //
 
 import Foundation
+import RxSwift
 
 protocol TodoRepositoryProtocol {
-    func saveTodoItem(item: TodoItem) -> Result<Bool, CoreDataError>
-    func readTodoList(page: Int, limit: Int, type: FilterType) -> Result<[TodoItem], CoreDataError>
-    func updateTodoItem(item: TodoItem) -> Result<Bool, CoreDataError>
-    func deleteTodoItem(item: TodoItem) -> Result<Bool, CoreDataError>
+    func saveTodoItem(item: TodoItem) -> Single<Bool>
+    func readTodoList(page: Int, limit: Int, type: FilterType) -> Single<[TodoItem]>
+    func updateTodoItem(item: TodoItem) -> Single<TodoItem>
+    func deleteTodoItem(item: TodoItem) -> Single<TodoItem>
 }

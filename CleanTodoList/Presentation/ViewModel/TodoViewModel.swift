@@ -49,11 +49,23 @@ class TodoViewModel: TodoViewModelProtocol {
     
     func transform(input: Input) -> Output {
         input.saveAction
-            .bind(onNext: { [weak self] item in
-                guard let self = self else { return }
-                let result = useCase.saveTodoItem(item: item)
-                handleResult(action: .save, item: item, result: result)
-            }).disposed(by: disposeBag)
+            .flatMap { [weak self] item -> Observable<Bool> in
+                guard let self = self else { return Observable.just(false) }
+                return useCase.saveTodoItem(item: item).asObservable()
+            }
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onNext: { [weak self] success in
+                    guard let self = self else { return }
+                    if success {
+                        refreshTodoItems(type: currentFilterType)
+                    }
+                },
+                onError: { [weak self] error in
+                    guard let self = self else { return }
+                    handleCoreDataError(error)
+                }
+            ).disposed(by: disposeBag)
         
         input.readAction
             .bind(onNext: { [weak self] _ in
@@ -62,17 +74,45 @@ class TodoViewModel: TodoViewModelProtocol {
             }).disposed(by: disposeBag)
         
         input.updateAction
-            .bind(onNext: { [weak self] item in
+            .flatMap { [weak self] item -> Observable<TodoItem> in
+                guard let self = self else { return Observable.empty() }
+                return useCase.updateTodoItem(item: item).asObservable()
+            }
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] updatedItem in
                 guard let self = self else { return }
-                let result = useCase.updateTodoItem(item: item)
-                handleResult(action: .update, item: item, result: result)
+                
+                switch self.currentFilterType {
+                case .all:
+                    if let index = self.allTodoItems.firstIndex(where: { $0.uuid == updatedItem.uuid }) {
+                        self.allTodoItems[index] = updatedItem
+                        self.allTodoItems.sort { $0.date > $1.date }
+                    }
+                case .done:
+                    self.refreshTodoItems(type: self.currentFilterType)
+                }
+                
+                self.todoItems.onNext(self.allTodoItems)
+                self.noMoreData.onNext(false)
+            }, onError: { [weak self] error in
+                guard let self = self else { return }
+                handleCoreDataError(error)
             }).disposed(by: disposeBag)
         
         input.deleteAction
-            .bind(onNext: { [weak self] item in
+            .flatMap { [weak self] item -> Observable<TodoItem> in
+                guard let self = self else { return Observable.empty() }
+                return useCase.deleteTodoItem(item: item).asObservable()
+            }
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] item in
                 guard let self = self else { return }
-                let result = useCase.deleteTodoItem(item: item)
-                handleResult(action: .delete, item: item, result: result)
+                allTodoItems.removeAll(where: { $0.uuid == item.uuid })
+                todoItems.onNext(allTodoItems)
+                noMoreData.onNext(false)
+            }, onError: { [weak self] error in
+                guard let self = self else { return }
+                handleCoreDataError(error)
             }).disposed(by: disposeBag)
         
         input.filterAction
@@ -92,10 +132,19 @@ class TodoViewModel: TodoViewModelProtocol {
     }
     
     private func readTodoItems(type: FilterType) {
-        self.isLoading.onNext(true)
-        let result = useCase.readTodoList(page: currentPage, limit: limit, type: type)
-        handleListResult(result: result)
-        self.isLoading.onNext(false)
+        useCase.readTodoList(page: currentPage, limit: limit, type: type).asObservable()
+            .observe(on: MainScheduler.instance)
+            .do(onSubscribe: { [weak self] in self?.isLoading.onNext(true) })
+            .subscribe(onNext: { [weak self] items in
+                guard let self = self else { return }
+                self.handleListResult(result: .success(items))
+                self.isLoading.onNext(false)
+            }, onError: { [weak self] error in
+                guard let self = self else { return }
+                handleCoreDataError(error)
+                self.isLoading.onNext(false)
+            })
+            .disposed(by: disposeBag)
     }
     
     private func refreshTodoItems(type: FilterType) {
@@ -120,29 +169,12 @@ class TodoViewModel: TodoViewModelProtocol {
         }
     }
     
-    private func handleResult(action: TodoActionType, item: TodoItem, result: Result<Bool, CoreDataError>) {
-        switch result {
-        case .success:
-            switch action {
-            case .save:
-                refreshTodoItems(type: currentFilterType)
-            case .update:
-                if currentFilterType == .all {
-                    guard let index = allTodoItems.firstIndex(where: { $0.uuid == item.uuid }) else { return }
-                    allTodoItems[index] = item
-                    allTodoItems.sort { $0.date > $1.date }
-                  } else if currentFilterType == .done {
-                      refreshTodoItems(type: currentFilterType)
-                  }
-            case .delete:
-                allTodoItems.removeAll(where: { $0.uuid == item.uuid })
-            }
-            todoItems.onNext(allTodoItems)
-            noMoreData.onNext(false)
-        case .failure(let error):
-            self.coreDataError.onNext(error.description)
+    private func handleCoreDataError(_ error: Error) {
+        if let coreDataError = error as? CoreDataError {
+            self.coreDataError.onNext(coreDataError.description)
+        } else {
+            self.coreDataError.onNext(error.localizedDescription)
         }
     }
-    
 }
 
