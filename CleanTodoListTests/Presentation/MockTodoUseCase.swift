@@ -6,6 +6,7 @@
 //
 
 import XCTest
+import RxSwift
 @testable import CleanTodoList
 
 final class MockTodoUseCase: TodoUseCaseProtocol {
@@ -14,33 +15,33 @@ final class MockTodoUseCase: TodoUseCaseProtocol {
         TodoItem(uuid: UUID(), title: "Todo_2", done: true, date: Date())
     ]
  
-    func saveTodoItem(item: TodoItem) -> Result<Bool, CoreDataError> {
+    func saveTodoItem(item: TodoItem) -> Single<Bool> {
         print("MockUseCase - saveTodoItem")
         readItems.append(item)
-        return .success(true)
+        return .just(true)
     }
     
-    func readTodoList(page: Int, limit: Int, type: FilterType) -> Result<[TodoItem], CoreDataError> {
+    func readTodoList(page: Int, limit: Int, type: FilterType) -> Single<[TodoItem]> {
         print("MockUseCase - readTodoItem")
-        return .success(readItems)
+        return .just(readItems)
     }
     
-    func updateTodoItem(item: TodoItem) -> Result<Bool, CoreDataError> {
+    func updateTodoItem(item: TodoItem) -> Single<TodoItem> {
         print("MockUseCase - updateTodoItem")
         if let index = readItems.firstIndex(where: { $0.uuid == item.uuid }) {
             readItems[index] = item
-            return .success(true)
+            return .just(item)
         }
-        return .failure(.updateError("업데이트 에러"))
+        return .error(CoreDataError.updateError("업데이트 에러"))
     }
     
-    func deleteTodoItem(item: TodoItem) -> Result<Bool, CoreDataError> {
+    func deleteTodoItem(item: TodoItem) -> Single<TodoItem> {
         print("MockUseCase - deleteTodoItem")
         if let index = readItems.firstIndex(where: { $0.uuid == item.uuid }) {
             readItems.remove(at: index)
-            return .success(true)
+            return .just(item)
         }
-        return .failure(.deleteError("삭제 에러"))
+        return .error(CoreDataError.updateError("삭제 에러"))
     }
     
 }

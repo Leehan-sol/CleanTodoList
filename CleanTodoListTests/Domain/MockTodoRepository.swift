@@ -6,13 +6,14 @@
 //
 
 import Foundation
+import RxSwift
 @testable import CleanTodoList
 
 final class MockTodoRepository: TodoRepositoryProtocol {
-    var readResult: Result<[TodoItem], CoreDataError> = .success([])
-    var saveResult: Result<Bool, CoreDataError> = .success(true)
-    var updateResult: Result<Bool, CoreDataError> = .success(true)
-    var deleteResult: Result<Bool, CoreDataError> = .success(true)
+    var readResult: Single<[TodoItem]> = .just([])
+    var saveResult: Single<Bool> = .just(true)
+    var updateResult: Single<TodoItem> = .just(TodoItem(uuid: UUID(), title: "default", done: false, date: Date()))
+    var deleteResult: Single<TodoItem> = .just(TodoItem(uuid: UUID(), title: "default", done: false, date: Date()))
     
     var savedItems: [TodoItem] = []
     
@@ -22,22 +23,22 @@ final class MockTodoRepository: TodoRepositoryProtocol {
     var isDeleteCalled = false
     var deleteItemParam: TodoItem?
     
-    func saveTodoItem(item: TodoItem) -> Result<Bool, CoreDataError> {
+    func saveTodoItem(item: TodoItem) -> Single<Bool> {
         savedItems.append(item)
         return saveResult
     }
     
-    func readTodoList(page: Int, limit: Int, type: FilterType) -> Result<[TodoItem], CoreDataError> {
+    func readTodoList(page: Int, limit: Int, type: FilterType) -> Single<[TodoItem]> {
         return readResult
     }
     
-    func updateTodoItem(item: TodoItem) -> Result<Bool, CoreDataError> {
+    func updateTodoItem(item: TodoItem) -> Single<TodoItem> {
         isUpdateCalled = true
         updateItemParam = item
         return updateResult
     }
     
-    func deleteTodoItem(item: TodoItem) -> Result<Bool, CoreDataError> {
+    func deleteTodoItem(item: TodoItem) -> Single<TodoItem> {
         isDeleteCalled = true
         deleteItemParam = item
         return deleteResult
